@@ -26,6 +26,7 @@ private:
         std::vector<Svg::Color> color_palette;
         int bus_label_font_size = 0;
         Svg::Point bus_label_offset;
+        std::vector<Json::Node> layers;
     };
 
     static RenderSettings MakeRenderSettings(const Json::Dict&);
@@ -34,10 +35,10 @@ private:
 
     using StopsSvgCoords = std::map<std::string, Svg::Point>;
     std::string RenderMap(const StopsSvgCoords&, const Descriptions::BusesDict&) const;
-    void RenderBusesRoutes(Svg::Document&, const StopsSvgCoords&, const Descriptions::BusesDict&) const;
-    void RenderBusesTitles(Svg::Document&, const StopsSvgCoords&, const Descriptions::BusesDict&) const;
+    void RenderBusLines(Svg::Document&, const StopsSvgCoords&, const Descriptions::BusesDict&) const;
+    void RenderBusLabels(Svg::Document&, const StopsSvgCoords&, const Descriptions::BusesDict&) const;
     void RenderStops(Svg::Document&, const StopsSvgCoords&) const;
-    void RenderStopsTitles(Svg::Document&, const StopsSvgCoords&) const;
+    void RenderStopLabels(Svg::Document&, const StopsSvgCoords&) const;
 
     const RenderSettings render_settings_;
     const Sphere::Point min_coords_;

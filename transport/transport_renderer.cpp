@@ -36,7 +36,8 @@ TransportRenderer::RenderSettings TransportRenderer::MakeRenderSettings(const Js
         .underlayer_width = json.at("underlayer_width").AsDouble(),
         .color_palette = json.at("color_palette").AsColorArray(),
         .bus_label_font_size = json.at("bus_label_font_size").AsInt(),
-        .bus_label_offset = json.at("bus_label_offset").AsPoint()
+        .bus_label_offset = json.at("bus_label_offset").AsPoint(),
+        .layers = json.at("layers").AsArray()
     };
 }
 
@@ -62,7 +63,7 @@ Svg::Point TransportRenderer::ProjectToSvgCoords(double zoom_coeff, Sphere::Poin
     };
 }
 
-void TransportRenderer::RenderBusesRoutes(Document& doc,
+void TransportRenderer::RenderBusLines(Document& doc,
                                           const StopsSvgCoords& stops_svg_coords,
                                           const BusesDict& buses_dict) const {
     size_t color_idx = 0;
@@ -85,7 +86,7 @@ void TransportRenderer::RenderBusesRoutes(Document& doc,
     }
 }
 
-void TransportRenderer::RenderBusesTitles(Document& doc,
+void TransportRenderer::RenderBusLabels(Document& doc,
                                           const StopsSvgCoords& stops_svg_coords,
                                           const BusesDict& buses_dict) const {
     size_t color_idx = 0;
@@ -116,8 +117,9 @@ void TransportRenderer::RenderBusesTitles(Document& doc,
 
         doc.Add(underlayer);
         doc.Add(title);
-        if (stops.front() != stops.back()) {
-            const auto coords = stops_svg_coords.at(stops.front());
+        const auto& final_stop = stops[data->final_stop_idx];
+        if (stops.front() != final_stop) {
+            const auto coords = stops_svg_coords.at(final_stop);
             doc.Add(underlayer.SetPoint(coords));
             doc.Add(title.SetPoint(coords));
         }
@@ -135,7 +137,7 @@ void TransportRenderer::RenderStops(Document& doc, const StopsSvgCoords& stops_s
     }
 }
 
-void TransportRenderer::RenderStopsTitles(Document& doc, const StopsSvgCoords& stops_svg_coords) const {
+void TransportRenderer::RenderStopLabels(Document& doc, const StopsSvgCoords& stops_svg_coords) const {
     for (const auto& [stop, coords] : stops_svg_coords) {
         Text underlayer;
         Text title =
@@ -162,10 +164,18 @@ void TransportRenderer::RenderStopsTitles(Document& doc, const StopsSvgCoords& s
 string TransportRenderer::RenderMap(const StopsSvgCoords& stops_svg_coords,
                                     const BusesDict& buses_dict) const {
     Document doc;
-    RenderBusesRoutes(doc, stops_svg_coords, buses_dict);
-    RenderBusesTitles(doc, stops_svg_coords, buses_dict);
-    RenderStops(doc, stops_svg_coords);
-    RenderStopsTitles(doc, stops_svg_coords);
+    for (const auto& layer_node : render_settings_.layers) {
+        const auto& layer = layer_node.AsString();
+        if (layer == "bus_lines") {
+            RenderBusLines(doc, stops_svg_coords, buses_dict);
+        } else if (layer == "bus_labels") {
+            RenderBusLabels(doc, stops_svg_coords, buses_dict);
+        } else if (layer == "stop_points") {
+            RenderStops(doc, stops_svg_coords);
+        } else if (layer == "stop_labels") {
+            RenderStopLabels(doc, stops_svg_coords);
+        }
+    }
 
     ostringstream oss;
     doc.Render(oss);

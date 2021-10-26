@@ -20,12 +20,10 @@ namespace Descriptions {
 
     int ComputeStopsDistance(const Stop& lhs, const Stop& rhs);
 
-    std::vector<std::string> ParseStops(const std::vector<Json::Node>& stop_nodes, bool is_roundtrip);
-
     struct Bus {
         std::string name;
         std::vector<std::string> stops;
-        bool is_roundtrip = false;
+        size_t final_stop_idx = 0;
 
         static Bus ParseFrom(const Json::Dict& attrs);
     };
