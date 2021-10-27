@@ -18,6 +18,10 @@ bool EqualWithAccuracy(double lhs, double rhs) {
     if (rhs != 0) {
         return abs(lhs - rhs) / rhs <= 0.0001;
     } else {
-        return lhs == 0;
+        return IsZero(lhs);
     }
+}
+
+bool IsZero(double x) {
+    return abs(x) < 1e-6;
 }

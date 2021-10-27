@@ -2,7 +2,6 @@
 
 #include <sstream>
 using namespace std;
-using namespace Svg;
 
 TransportCatalog::TransportCatalog(std::vector<Descriptions::InputQuery> data,
                                    const Json::Dict& routing_settings_json,
@@ -13,20 +12,10 @@ TransportCatalog::TransportCatalog(std::vector<Descriptions::InputQuery> data,
         });
 
     Descriptions::StopsDict stops_dict;
-    Sphere::Point max_coords = {0, 0};
-    Sphere::Point min_coords = {numeric_limits<double>::max(), numeric_limits<double>::max()};
     for (const auto& item : Range{begin(data), stops_end}) {
         const auto& stop = get<Descriptions::Stop>(item);
         stops_dict[stop.name] = &stop;
         stops_.insert({stop.name, {}});
-
-        double lat = stop.position.latitude;
-        max_coords.latitude = std::max(max_coords.latitude, lat);
-        min_coords.latitude = std::min(min_coords.latitude, lat);
-
-        double lon = stop.position.longitude;
-        max_coords.longitude = std::max(max_coords.longitude, lon);
-        min_coords.longitude = std::min(min_coords.longitude, lon);
     }
 
     Descriptions::BusesDict buses_dict;
@@ -47,13 +36,7 @@ TransportCatalog::TransportCatalog(std::vector<Descriptions::InputQuery> data,
     }
 
     router_ = make_unique<TransportRouter>(stops_dict, buses_dict, routing_settings_json);
-    renderer_ = make_unique<TransportRenderer>(
-        stops_dict,
-        buses_dict,
-        render_settings_json,
-        min_coords,
-        max_coords
-    );
+    map_ = BuildMap(stops_dict, buses_dict, render_settings_json);
 }
 
 const TransportCatalog::Stop* TransportCatalog::GetStop(const string& name) const {
@@ -92,6 +75,17 @@ double TransportCatalog::ComputeGeoRouteDistance(
     return result;
 }
 
-const string& TransportCatalog::RenderMap() const {
-    return renderer_->RenderMap();
+string TransportCatalog::RenderMap() const {
+    ostringstream oss;
+    map_.Render(oss);
+    return oss.str();
+}
+
+Svg::Document TransportCatalog::BuildMap(const Descriptions::StopsDict& stops_dict,
+                                         const Descriptions::BusesDict& buses_dict,
+                                         const Json::Dict& render_settings_json) {
+    if (stops_dict.empty()) {
+        return {};
+    }
+    return MapRenderer(stops_dict, buses_dict, render_settings_json).Render();
 }

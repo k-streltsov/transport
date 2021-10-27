@@ -23,8 +23,7 @@ namespace Svg {
         uint8_t blue;
     };
 
-    struct Rgba {
-        Rgb rgb;
+    struct Rgba : Rgb {
         double alpha;
     };
 

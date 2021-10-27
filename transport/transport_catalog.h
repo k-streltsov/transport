@@ -3,7 +3,7 @@
 #include "descriptions.h"
 #include "json.h"
 #include "transport_router.h"
-#include "transport_renderer.h"
+#include "map_renderer.h"
 #include "utils.h"
 
 #include <optional>
@@ -40,24 +40,24 @@ public:
     const Stop* GetStop(const std::string& name) const;
     const Bus* GetBus(const std::string& name) const;
 
-    std::optional<TransportRouter::RouteInfo> FindRoute(const std::string& stop_from, const std::string& stop_to) const;
+    std::optional<TransportRouter::RouteInfo> FindRoute(const std::string& stop_from,
+                                                        const std::string& stop_to) const;
 
-    const std::string& RenderMap() const;
+    std::string RenderMap() const;
 
 private:
-    static int ComputeRoadRouteLength(
-        const std::vector<std::string>& stops,
-        const Descriptions::StopsDict& stops_dict
-    );
+    static int ComputeRoadRouteLength(const std::vector<std::string>& stops,
+                                      const Descriptions::StopsDict& stops_dict);
 
-    static double ComputeGeoRouteDistance(
-        const std::vector<std::string>& stops,
-        const Descriptions::StopsDict& stops_dict
-    );
+    static double ComputeGeoRouteDistance(const std::vector<std::string>& stops,
+                                          const Descriptions::StopsDict& stops_dict);
+
+    static Svg::Document BuildMap(const Descriptions::StopsDict&,
+                                  const Descriptions::BusesDict&,
+                                  const Json::Dict&);
 
     std::map<std::string, Stop> stops_;
     std::map<std::string, Bus> buses_;
     std::unique_ptr<TransportRouter> router_;
-    std::unique_ptr<TransportRenderer> renderer_;
-    std::optional<std::string> map;
+    Svg::Document map_;
 };

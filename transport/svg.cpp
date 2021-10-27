@@ -161,9 +161,9 @@ namespace Svg {
     }
 
     void RenderColor(ostream& out, Rgba rgba) {
-        out << "rgba(" << static_cast<int>(rgba.rgb.red)
-            << "," << static_cast<int>(rgba.rgb.green)
-            << "," << static_cast<int>(rgba.rgb.blue)
+        out << "rgba(" << static_cast<int>(rgba.red)
+            << "," << static_cast<int>(rgba.green)
+            << "," << static_cast<int>(rgba.blue)
             << "," << rgba.alpha << ")";
     }
 
@@ -282,7 +282,7 @@ namespace Svg {
         if (abs(lhs.alpha - rhs.alpha) >= 1e-6) {
             return false;
         }
-        return lhs.rgb == rhs.rgb;
+        return static_cast<Rgb>(lhs) == static_cast<Rgb>(rhs);
     }
 
     bool operator==(const Polyline& lhs, const Polyline& rhs) {

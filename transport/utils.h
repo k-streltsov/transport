@@ -44,3 +44,4 @@ const V* GetValuePointer(const std::map<K, V>& map, const K& key) {
 std::string_view Strip(std::string_view line);
 
 bool EqualWithAccuracy(double lhs, double rhs);
+bool IsZero(double x);

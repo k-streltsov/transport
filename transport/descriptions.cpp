@@ -28,26 +28,41 @@ namespace Descriptions {
         }
     }
 
-    Bus Bus::ParseFrom(const Json::Dict& attrs) {       
-        Bus bus;
-        bus.name = attrs.at("name").AsString();
-
-        bool is_roundtrip = attrs.at("is_roundtrip").AsBool();
-        const auto& stop_nodes = attrs.at("stops").AsArray();
-        auto& stops = bus.stops;
+    vector<string> ParseStops(const vector<Json::Node>& stop_nodes, bool is_roundtrip) {
+        vector<string> stops;
         stops.reserve(stop_nodes.size());
-        for (const auto& stop_node : stop_nodes) {
+        for (const Json::Node& stop_node : stop_nodes) {
             stops.push_back(stop_node.AsString());
         }
+        if (is_roundtrip || stops.size() <= 1) {
+            return stops;
+        }
+        stops.reserve(stops.size() * 2 - 1);  // end stop is not repeated
+        for (size_t stop_idx = stops.size() - 1; stop_idx > 0; --stop_idx) {
+            stops.push_back(stops[stop_idx - 1]);
+        }
+        return stops;
+    }
 
-        if (!is_roundtrip && bus.stops.size() > 1) {
-            bus.final_stop_idx = stops.size() - 1;
-            stops.reserve(stops.size() * 2 - 1);  // end stop is not repeated
-            for (size_t stop_idx = bus.stops.size() - 1; stop_idx > 0; --stop_idx) {
-                stops.push_back(stops[stop_idx - 1]);
-            }
+    Bus Bus::ParseFrom(const Json::Dict& attrs) {       
+        const auto& name = attrs.at("name").AsString();
+        const auto& stops = attrs.at("stops").AsArray();
+
+        if (stops.empty()) {
+            return Bus{.name = name};
         }
 
+        const auto& begin_stop = stops.front().AsString();
+        const auto& end_stop = stops.back().AsString();
+        Bus bus{
+            .name = name,
+            .stops = ParseStops(stops, attrs.at("is_roundtrip").AsBool()),
+            .endpoints = {stops.front().AsString(), stops.back().AsString()}
+        };
+
+        if (bus.endpoints.front() == bus.endpoints.back()) {
+            bus.endpoints.pop_back();
+        }
         return bus;
     }
 
